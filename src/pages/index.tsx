@@ -3,7 +3,7 @@ import styles from '@/styles/Home.module.css'
 import { getAuth, onAuthStateChanged, User } from "firebase/auth";
 import { db } from '../firebase';
 import { useEffect, useRef, useState } from 'react';
-import { collection, query, getDocs, Timestamp, doc, updateDoc, deleteDoc, onSnapshot, orderBy, where, OrderByDirection, QuerySnapshot, DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
+import { collection, query, getDocs, Timestamp, doc, updateDoc, deleteDoc, onSnapshot, orderBy, where, OrderByDirection } from 'firebase/firestore';
 import Link from 'next/link';
 import DisplayRow from '@/components/DisplayRow';
 import EditRow from '@/components/EditRow';
@@ -37,6 +37,8 @@ export default function Home({ arr }: any) {
     const unsub = onSnapshot(qr, snapshot => {
       snapshot.docChanges().forEach(change => {
         const elem = { ...change.doc.data(), id: change.doc.id } as Description;
+        console.log(change.type);
+        console.log(elem);
         if (change.type === "added" || change.type === "modified") {
           const ind = maps.findIndex(w => w.id === elem.id);
           if (ind === -1) {
@@ -44,18 +46,24 @@ export default function Home({ arr }: any) {
           } else {
             setMaps(w => [...w.slice(0, ind), elem, ...w.slice(ind + 1)]);
           }
-
         }
-        if (change.type === 'removed') {
-          const ind = maps.findIndex(w => w.id === elem.id);
-          if (ind !== -1) {
-            setMaps(w => [...w.slice(0, ind), ...w.slice(ind + 1)]);
-          }
-        }
-        console.log(change.type);
-        console.log(elem);
-
+        // removed does not work for whatever reason
+        // probably because im fetching data from getServerSideProps
+        // i should be doing here but that would require to make 
+        // a loading screen soooooo i wont do that.
+        // if (change.type === 'removed') {
+        //   const ind = maps.findIndex(w => w.id === elem.id);
+        //   console.log(maps);
+        //   console.log(ind);
+        //   if (ind !== -1) {
+        //     setMaps(w => [...w.slice(0, ind), ...w.slice(ind + 1)]);
+        //   } else {
+        //     console.error("Element not found in maps");
+        //     console.error(elem);
+        //   }
+        // }
       })
+
     })
     return () => {
       unsub();
@@ -96,7 +104,7 @@ export default function Home({ arr }: any) {
       w.modified = new Date().valueOf();
       const { id, ...rest } = w;
       await updateDoc(docRef, { ...rest });
-      const currIndex = arr.indexOf(currDesc);
+      const currIndex = maps.findIndex(a => a.id === currDesc?.id);
       setMaps(a => [...a.slice(0, currIndex), w, ...a.slice(currIndex + 1)]);
       setCurrentDesc(null);
     } catch (err) {
@@ -120,54 +128,54 @@ export default function Home({ arr }: any) {
   }
 
   function sortDescriptions(toSort: Array<Description>) {
-    let arr = [...toSort];
+    let tmp = [...toSort];
     switch (ord.col) {
       case "name":
         if (ord.dir === "asc") {
-          arr.sort((a, b) => comparator(a.name, b.name))
+          tmp.sort((a, b) => comparator(a.name, b.name))
         } else {
-          arr.sort((a, b) => comparator(b.name, a.name))
+          tmp.sort((a, b) => comparator(b.name, a.name))
         }
         break;
       case "time":
         if (ord.dir === "asc") {
-          arr.sort((a, b) => comparator(a.time[0].seconds, b.time[0].seconds))
+          tmp.sort((a, b) => comparator(a.time[0].seconds, b.time[0].seconds))
         } else {
-          arr.sort((a, b) => comparator(b.time[0].seconds, a.time[0].seconds))
+          tmp.sort((a, b) => comparator(b.time[0].seconds, a.time[0].seconds))
         }
         break;
       case "size":
         if (ord.dir === "asc") {
-          arr.sort((a, b) => comparator(parseInt(a.size), parseInt(b.size)))
+          tmp.sort((a, b) => comparator(parseInt(a.size), parseInt(b.size)))
         } else {
-          arr.sort((a, b) => comparator(parseInt(b.size), parseInt(a.size)))
+          tmp.sort((a, b) => comparator(parseInt(b.size), parseInt(a.size)))
         }
         break;
       case "description":
         if (ord.dir === "asc") {
-          arr.sort((a, b) => comparator(a.description, b.description))
+          tmp.sort((a, b) => comparator(a.description, b.description))
         } else {
-          arr.sort((a, b) => comparator(b.description, a.description))
+          tmp.sort((a, b) => comparator(b.description, a.description))
         }
         break;
       default:
-        arr.sort((a, b) => comparator(b.time, a.time))
+        tmp.sort((a, b) => comparator(b.time, a.time))
         break;
     }
-    return arr;
+    return tmp;
   }
 
 
   async function searchFor(val: string, pass: boolean = false) {
     if (prevVal === val && !pass) return;
-    let arr;
+    let tmp;
     if (val.length === 0) {
-      arr = sortDescriptions(maps);
+      tmp = sortDescriptions(maps);
     } else {
       let rez = maps.filter(w => w.description.includes(val) || w.link.includes(val) || w.name.includes(val));
-      arr = sortDescriptions(rez);
+      tmp = sortDescriptions(rez);
     }
-    setDisp(arr);
+    setDisp(tmp);
     setPrevVal(val);
   }
 
@@ -198,6 +206,7 @@ export default function Home({ arr }: any) {
       isFirstRun2.current = false;
       return;
     }
+    console.log("maps changed " + maps.length);
     searchFor(prevVal, true);
   }, [maps])
 
@@ -206,7 +215,6 @@ export default function Home({ arr }: any) {
       isFirstRun.current = false;
       return;
     }
-    console.log(ord);
     setDisp(w => sortDescriptions(w));
   }, [ord]);
 
@@ -232,10 +240,30 @@ export default function Home({ arr }: any) {
           <table className='tb mb-4'>
             <thead>
               <tr>
-                <th onClick={() => changeSort('name')} className='cursor-pointer select-none'>Name</th>
-                <th onClick={() => changeSort('size')} className='cursor-pointer select-none'>Size</th>
-                <th onClick={() => changeSort('description')} className='cursor-pointer select-none'>Description</th>
-                <th onClick={() => changeSort('time')} className='cursor-pointer select-none' >Date</th>
+                <th onClick={() => changeSort('name')} className='cursor-pointer select-none'>
+                  <div className='flex'>
+                    <p>Name</p>
+                    {ord.col === "name" ? ord.dir === "asc" ? <i className="gg-arrow-down"></i> : <i className="gg-arrow-up"></i> : ""}
+                  </div>
+                </th>
+                <th onClick={() => changeSort('size')} className='cursor-pointer select-none'>
+                  <div className='flex'>
+                    <p>Size</p>
+                    {ord.col === "size" ? ord.dir === "asc" ? <i className="gg-arrow-down"></i> : <i className="gg-arrow-up"></i> : ""}
+                  </div>
+                </th>
+                <th onClick={() => changeSort('description')} className='cursor-pointer select-none'>
+                  <div className='flex'>
+                    <p>Description</p>
+                    {ord.col === "description" ? ord.dir === "asc" ? <i className="gg-arrow-down"></i> : <i className="gg-arrow-up"></i> : ""}
+                  </div>
+                </th>
+                <th onClick={() => changeSort('time')} className='cursor-pointer select-none' >
+                  <div className='flex'>
+                    <p>Date</p>
+                    {ord.col === "time" ? ord.dir === "asc" ? <i className="gg-arrow-down"></i> : <i className="gg-arrow-up"></i> : ""}
+                  </div>
+                </th>
                 {user ? <th>Options</th> : ""}
               </tr>
             </thead>
@@ -252,7 +280,7 @@ export default function Home({ arr }: any) {
           </table>
           {user ? <AddNew /> : <div className='text-center'>
             <h2>Want to edit?</h2>
-            <Link href="/login">Login</Link>
+            <Link className='text-blue-600' href="/login">Login</Link>
           </div>}
         </div>
       </main>

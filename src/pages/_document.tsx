@@ -8,6 +8,8 @@ export default function Document() {
         <link href='https://css.gg/remove.css' rel='stylesheet'></link>
         <link href='https://css.gg/check-o.css' rel='stylesheet'></link>
         <link href='https://css.gg/add.css' rel='stylesheet'></link>
+        <link href='https://css.gg/arrow-down.css' rel='stylesheet'></link>
+        <link href='https://css.gg/arrow-up.css' rel='stylesheet'></link>
       </Head>
       <body>
         <Main />
