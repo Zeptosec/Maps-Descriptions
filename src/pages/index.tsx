@@ -226,11 +226,11 @@ export default function Home({ arr }: any) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className={styles.main}>
+      <main className={`${styles.main} mx-4`}>
         <div className='max-w-4xl m-auto'>
           <div className='my-2 flex justify-between'>
             <div className='flex items-end'>
-              <p>{maps.length} items</p>
+              <p>{disp.length} items</p>
             </div>
             <div>
               <p className='text-center'>Search</p>
