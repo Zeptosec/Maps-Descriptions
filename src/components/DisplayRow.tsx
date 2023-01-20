@@ -12,7 +12,7 @@ export default function DisplayRow({ desc, startEdit, remove, user }: RowData) {
 
     return (
         <>
-            <td className=" align-top"><a className="text-blue-600" href={desc.link}>{desc.name}</a></td>
+            <td className=" align-top"><a className="text-blue-600" target="_blank" href={desc.link}>{desc.name}</a></td>
             <td className=" align-top"><div dangerouslySetInnerHTML={{ __html: desc.size }} /></td>
             <td className=" align-top"><div dangerouslySetInnerHTML={{ __html: desc.description }} /></td>
             <td className="w-32 align-top">{desc.time.map(w => new Date(w.seconds * 1000).toISOString().split('T')[0]).join(", ")}</td>
