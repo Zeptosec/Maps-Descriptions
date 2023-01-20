@@ -34,14 +34,10 @@ export default function Home({ arr }: any) {
       setUser(usr);
     });
 
-    console.log(arr);
-
     const qr = query(dbInstance, where("modified", '>=', new Date().valueOf()));
     const unsub = onSnapshot(qr, snapshot => {
       snapshot.docChanges().forEach(change => {
         const elem = { ...change.doc.data(), id: change.doc.id } as Description;
-        console.log(change.type);
-        console.log(elem);
         if (change.type === "added" || change.type === "modified") {
           const ind = maps.findIndex(w => w.id === elem.id);
           if (ind === -1) {
@@ -50,26 +46,24 @@ export default function Home({ arr }: any) {
             setMaps(w => [...w.slice(0, ind), elem, ...w.slice(ind + 1)]);
           }
         }
-        // removed does not work for whatever reason
-        // probably because im fetching data from getServerSideProps
-        // i should be doing here but that would require to make 
-        // a loading screen soooooo i wont do that.
-        // if (change.type === 'removed') {
-        //   const ind = maps.findIndex(w => w.id === elem.id);
-        //   console.log(maps);
-        //   console.log(ind);
-        //   if (ind !== -1) {
-        //     setMaps(w => [...w.slice(0, ind), ...w.slice(ind + 1)]);
-        //   } else {
-        //     console.error("Element not found in maps");
-        //     console.error(elem);
-        //   }
-        // }
       })
-
+    })
+    const unsub2 = onSnapshot(query(dbInstance), snapshot => {
+      snapshot.docChanges().forEach(change => {
+        if (change.type === 'removed') {
+          const id = change.doc.id;
+          const ind = maps.findIndex(w => w.id === id);
+          if (ind !== -1) {
+            setMaps(w => [...w.slice(0, ind), ...w.slice(ind + 1)]);
+          } else {
+            console.error("Could not find an element with id = " + id);
+          }
+        }
+      })
     })
     return () => {
       unsub();
+      unsub2();
     }
   }, [])
 
@@ -230,7 +224,7 @@ export default function Home({ arr }: any) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className={`${styles.main} mx-4`}>
-        <div className='max-w-4xl m-auto'>
+        <div className='max-w-7xl m-auto'>
           <div className='my-2 flex justify-between'>
             <div className='flex items-end'>
               <p>{disp.length} items</p>
@@ -243,7 +237,7 @@ export default function Home({ arr }: any) {
           <table className='tb mb-4'>
             <thead>
               <tr>
-                <th onClick={() => changeSort('name')} className='cursor-pointer select-none'>
+                <th onClick={() => changeSort('name')} className='cursor-pointer select-none md:min-w-[225px] min-w-fit '>
                   <div className='flex'>
                     <p>Name</p>
                     {ord.col === "name" ? ord.dir === "asc" ? <i className="gg-arrow-down"></i> : <i className="gg-arrow-up"></i> : ""}
