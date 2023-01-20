@@ -33,6 +33,9 @@ export default function Home({ arr }: any) {
     onAuthStateChanged(auth, usr => {
       setUser(usr);
     });
+
+    console.log(arr);
+
     const qr = query(dbInstance, where("modified", '>=', new Date().valueOf()));
     const unsub = onSnapshot(qr, snapshot => {
       snapshot.docChanges().forEach(change => {
