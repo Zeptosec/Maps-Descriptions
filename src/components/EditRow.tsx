@@ -28,15 +28,15 @@ export default function EditRow({ desc, update, cancel }: RowData) {
             <td>
                 <div className="grid grid-cols-1 gap-2 min-w-[170px]">
                     <label htmlFor="Name">Name</label>
-                    <input type="text" name="Name" id="Name" value={name} onChange={w => setName(w.target.value)} />
+                    <input className="text-black" type="text" name="Name" id="Name" value={name} onChange={w => setName(w.target.value)} />
                     <label htmlFor="Link">Link</label>
-                    <input type="text" name="Link" id="Link" value={link} onChange={w => setLink(w.target.value)} />
+                    <input className="text-black" type="text" name="Link" id="Link" value={link} onChange={w => setLink(w.target.value)} />
                 </div>
             </td>
-            <td><input className="w-16" type="text" name="Size" id="Size" value={size} onChange={w => setSize(w.target.value)} /></td>
-            <td><textarea className="resize" name="Descrip" id="Descrip" value={description} onChange={w => setDescription(w.target.value)} /></td>
+            <td><input className="w-16 text-black" type="text" name="Size" id="Size" value={size} onChange={w => setSize(w.target.value)} /></td>
+            <td><textarea className="resize text-black" name="Descrip" id="Descrip" value={description} onChange={w => setDescription(w.target.value)} /></td>
             <td>{dates.map((w, k) => (
-                <div key={`${k}b`} className="flex gap-2">
+                <div key={`${k}b`} className="flex gap-2 text-black">
                     <input type="date" key={`${k}a`} value={new Date(w.seconds * 1000).toISOString().split('T')[0]} onChange={e => setDates(dts => [...dts.slice(0, k), Timestamp.fromDate(new Date(e.target.value)), ...dts.slice(k + 1)])} />
                     <div className="w-6 mt-0.5 cursor-pointer" onClick={() => removeDate(k)}>
                         <i className="gg-remove" ></i>

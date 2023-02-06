@@ -8,6 +8,10 @@
   inherits: false;
 }
 
+.highlight {
+  background-color: #ffff0077;
+}
+
 body {
   background-color: #232323;
   color: white
