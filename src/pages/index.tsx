@@ -49,8 +49,9 @@ export default function Home() {
     const unsub = onSnapshot(qr, snapshot => {
       snapshot.docChanges().forEach(change => {
         const elem = { ...change.doc.data(), id: change.doc.id } as Description;
+        
         if (change.type === "added" || change.type === "modified") {
-          const ind = maps.findIndex(w => w.id === elem.id);
+          const ind = maps.findIndex(w => w.id === change.doc.id);
           if (ind === -1) {
             setMaps(w => [...w, elem]);
           } else {
@@ -182,15 +183,17 @@ export default function Home() {
       tmp = sortDescriptions(maps);
     } else {
       let rez = maps.filter(w => w.description.toLowerCase().includes(val) || w.link.toLowerCase().includes(val) || w.name.toLowerCase().includes(val))
-      .map(w => {
-        if(w.description.toLowerCase().includes(val)){
-          w.description = w.description.replaceAll(`${val}`, `<span class='highlight'>${val}</span>`);
-        }
-        if(w.name.toLowerCase().includes(val)){
-          w.name = w.name.replaceAll(`${val}`, `<span class='highlight'>${val}</span>`);
-        }
-        return w;
-      });
+        .map(w => {
+          let wdesc = w.description;
+          let wname = w.name;
+          if (w.description.toLowerCase().includes(val)) {
+            wdesc = w.description.replaceAll(`${val}`, `<span class='highlight'>${val}</span>`);
+          }
+          if (w.name.toLowerCase().includes(val)) {
+            wname = w.name.replaceAll(`${val}`, `<span class='highlight'>${val}</span>`);
+          }
+          return { ...w, name: wname, description: wdesc };
+        });
       tmp = sortDescriptions(rez);
     }
     setDisp(tmp);
@@ -247,6 +250,7 @@ export default function Home() {
       <main className={`${styles.main} mx-4`}>
         {loading ? <p className='text-center text-4xl mt-4'>Loading maps...</p> :
           <div className='max-w-7xl m-auto'>
+            {user ? <AddNew /> : ""}
             <div className='my-2 flex justify-between'>
               <div className='flex items-end'>
                 <p>{disp.length} items</p>
@@ -297,7 +301,7 @@ export default function Home() {
 
               </tbody>
             </table>
-            {user ? <AddNew /> : <div className='text-center'>
+            {user ? "" : <div className='text-center'>
               <h2>Want to edit?</h2>
               <Link className='text-blue-600' href="/login">Login</Link>
             </div>}
