@@ -1,6 +1,6 @@
 import Head from 'next/head'
 import styles from '@/styles/Home.module.css'
-import { getAuth, onAuthStateChanged, User } from "firebase/auth";
+import { getAuth, onAuthStateChanged, signOut, User } from "firebase/auth";
 import { db } from '../firebase';
 import { useEffect, useRef, useState } from 'react';
 import { collection, query, getDocs, Timestamp, doc, updateDoc, deleteDoc, onSnapshot, orderBy, where, OrderByDirection } from 'firebase/firestore';
@@ -49,9 +49,9 @@ export default function Home() {
     const unsub = onSnapshot(qr, snapshot => {
       snapshot.docChanges().forEach(change => {
         const elem = { ...change.doc.data(), id: change.doc.id } as Description;
-        
+        console.log(elem)
         if (change.type === "added" || change.type === "modified") {
-          const ind = maps.findIndex(w => w.id === change.doc.id);
+          const ind = maps.findIndex(w => w.id === elem.id);
           if (ind === -1) {
             setMaps(w => [...w, elem]);
           } else {
@@ -197,6 +197,7 @@ export default function Home() {
       tmp = sortDescriptions(rez);
     }
     setDisp(tmp);
+    console.log("maps", maps, "disp", disp);
     setPrevVal(val);
   }
 
@@ -301,7 +302,9 @@ export default function Home() {
 
               </tbody>
             </table>
-            {user ? "" : <div className='text-center'>
+            {user ? <div>
+              <h2 className='text-blue-600 hover:underline cursor-pointer' onClick={() => signOut(getAuth())}>Logout</h2>
+            </div> : <div className='text-center'>
               <h2>Want to edit?</h2>
               <Link className='text-blue-600' href="/login">Login</Link>
             </div>}
