@@ -30,6 +30,7 @@ export default function Home() {
   const [prevVal, setPrevVal] = useState<string>("");
   const [ord, setOrd] = useState<Ordering>({ col: 'time', dir: "desc" });
   const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     async function fetchMaps() {
       const rs = await getDocs(query(dbInstance, orderBy('time', 'desc')));
@@ -49,14 +50,15 @@ export default function Home() {
     const unsub = onSnapshot(qr, snapshot => {
       snapshot.docChanges().forEach(change => {
         const elem = { ...change.doc.data(), id: change.doc.id } as Description;
-        console.log(elem)
         if (change.type === "added" || change.type === "modified") {
-          const ind = maps.findIndex(w => w.id === elem.id);
-          if (ind === -1) {
-            setMaps(w => [...w, elem]);
-          } else {
-            setMaps(w => [...w.slice(0, ind), elem, ...w.slice(ind + 1)]);
-          }
+          setMaps(curr => {
+            const ind = curr.findIndex(w => w.id == elem.id);
+            if (ind === -1) {
+              return [...curr, elem];
+            } else {
+              return [...curr.slice(0, ind), elem, ...curr.slice(ind + 1)];
+            }
+          })
         }
       })
     })
@@ -64,12 +66,16 @@ export default function Home() {
       snapshot.docChanges().forEach(change => {
         if (change.type === 'removed') {
           const id = change.doc.id;
-          const ind = maps.findIndex(w => w.id === id);
-          if (ind !== -1) {
-            setMaps(w => [...w.slice(0, ind), ...w.slice(ind + 1)]);
-          } else {
-            console.error("Could not find an element with id = " + id);
-          }
+
+          setMaps(curr => {
+            const ind = curr.findIndex(w => w.id === id);
+            if (ind !== -1) {
+              return [...curr.slice(0, ind), ...curr.slice(ind + 1)];
+            } else {
+              console.error("Could not find an element with id = " + id);
+              return curr;
+            }
+          })
         }
       })
     })
@@ -302,7 +308,7 @@ export default function Home() {
 
               </tbody>
             </table>
-            {user ? <div>
+            {user ? <div className='text-center'>
               <h2 className='text-blue-600 hover:underline cursor-pointer' onClick={() => signOut(getAuth())}>Logout</h2>
             </div> : <div className='text-center'>
               <h2>Want to edit?</h2>
