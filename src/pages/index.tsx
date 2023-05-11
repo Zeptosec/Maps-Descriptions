@@ -192,12 +192,12 @@ export default function Home() {
         .map(w => {
           let wdesc = w.description;
           let wname = w.name;
-          // if (w.description.toLowerCase().includes(val)) {
-          //   wdesc = w.description.replaceAll(`${val}`, `<span class='highlight'>${val}</span>`);
-          // }
-          if (w.name.toLowerCase().includes(val)) {
-            wname = w.name.replaceAll(`${val}`, `<span class='highlight'>${val}</span>`);
+          if (w.description.toLowerCase().includes(val)) {
+            wdesc = w.description.replaceAll(`${val}`, `<span class='highlight'>${val}</span>`);
           }
+          // if (w.name.toLowerCase().includes(val)) {
+          //   wname = w.name.replaceAll(`${val}`, `<span class='highlight'>${val}</span>`);
+          // }
           return { ...w, name: wname, description: wdesc };
         });
       tmp = sortDescriptions(rez);
